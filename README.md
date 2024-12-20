@@ -10,7 +10,7 @@ R scripts to replicate the macaque LGN transcriptomics analysis results presente
    2. 1_data_collection
    3. 2_clustering
    4. 3_figures
-3. Figrues will be saved into /analysis_output folder
+3. Figures will be saved into /analysis_output folder
 
 ## Contact
 Scott - shsun@mgh.harvard.edu
