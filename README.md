@@ -5,4 +5,9 @@ R scripts to replicate the macaque LGN transcriptomics analysis results presente
 
 ## Steps
 1. Download macaque LGN data from the [Allen Brain Map](https://portal.brain-map.org/atlases-and-data/rnaseq/comparative-lgn) and place into /data folder
+2. Run the R scripts in the following order
+   1. 0_install_packages
+   2. 1_data_collection
+   3. 2_clustering
+   4. 3_figures
 
