@@ -13,4 +13,5 @@ R scripts to replicate the macaque LGN transcriptomics analysis results presente
 3. Figures will be saved into /analysis_output folder
 
 ## Contact
-Scott - shsun@mgh.harvard.edu
+Scott Sun - shsun@mgh.harvard.edu
+John Pezaris - pezaris.john@mgh.harvard.edu
