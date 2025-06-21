@@ -28,9 +28,9 @@ num_m = 2 # number of m clusters
 num_p = 2 # number of p clusters
 num_k = 3 # number of k clusters
 
-all_colors <- c(colorRampPalette(colors = c("darkred", "lightpink"))(num_m),
-                colorRampPalette(colors = c("#2E2D88", "lightblue"))(num_p),
-                colorRampPalette(colors = c("#004B49","#ACE1AF"))(num_k))
+all_colors <- c("#de2d26", "#fee0d2",
+                "#3182bd", "#a6bddb",
+                "#31a354", "#a1d99b", "#e5f5e0")
 names(all_colors) <- c("M1","M2","P1","P2","K1","K2","K3")
 # barplot(rep(1, 9), col = all_colors, border = NA, names.arg = names(all_colors)) # check colors
 
@@ -86,13 +86,36 @@ for (nam in names(subcells)) {
   
   
   # plot UMAP
-  umap_plot <- DimPlot(object, reduction = "umap", group.by = "cluster_label", alpha = 0.75, cols= all_colors, pt.size	= 3) + 
-    ggtitle("") + 
-    theme(aspect.ratio = 1,
-          panel.border = element_rect(color = "black", fill = NA, size = 0.5)) +
-    theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
-    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
-          axis.text.y = element_blank(), axis.ticks.y = element_blank())
+  # umap_plot <- DimPlot(object, reduction = "umap", group.by = "cluster_label", alpha = 1, cols= all_colors, pt.size	= 1) + 
+  #   ggtitle("") + 
+  #   theme(aspect.ratio = 1,
+  #         panel.border = element_rect(color = "black", fill = NA, size = 0.5)) +
+  #   theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
+  #   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+  #         axis.text.y = element_blank(), axis.ticks.y = element_blank())
+  
+  # Extract UMAP coordinates
+  umap_df <- as.data.frame(Embeddings(object, reduction = "umap"))
+  colnames(umap_df) <- c("UMAP_1", "UMAP_2")
+  umap_df$cluster_label <- object@meta.data$cluster_label
+  
+  # Manually plot with black outline
+  umap_plot <- ggplot(umap_df, aes(x = UMAP_1, y = UMAP_2, fill = cluster_label)) +
+    geom_point(shape = 21, color = "black", size = 2, stroke = 0.3, alpha = 1) +
+    scale_fill_manual(values = all_colors) +
+    coord_fixed() +
+    theme_minimal() +
+    theme(
+      aspect.ratio = 1,
+      panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+      panel.grid = element_blank(),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      axis.title = element_blank(),
+      axis.text = element_blank(),
+      axis.ticks = element_blank()
+    )
+  
   plot_list[[1]] <- umap_plot
   
   # get differential gene expressions
@@ -214,6 +237,14 @@ for (nam in names(subcells)) {
     geom_point(aes(color = significant), alpha = 0.6) +
     geom_vline(xintercept = 1, linetype = "dotted", color = "black") +
     geom_hline(yintercept = -log10(0.05), linetype = "dotted", color = "black") +
+    
+    # Add annotation labels, placed closer to top and right
+    annotate("text",
+             x = max(volcano_data$avg_log2FC, na.rm = TRUE),
+             y = -log10(0.05),
+             label = "p = 0.05",
+             hjust = 0, vjust = -0.5, size = 3) +
+    
     ggrepel::geom_text_repel(aes(label = label), size = 2.5, max.overlaps = 50, box.padding = 0.3) +
     scale_color_manual(values = c("Significant" = "red", "Not Significant" = "grey")) +
     labs(title = paste("Volcano Plot -", nam),
@@ -223,6 +254,8 @@ for (nam in names(subcells)) {
     xlim(0, max(volcano_data$avg_log2FC, na.rm = TRUE)) +
     ylim(0, max(volcano_data$log10_padj, na.rm = TRUE)) +
     facet_wrap(~ cluster, scales = "free_y", ncol = 3)
+  
+  
   
   # pdf(paste0("analysis_output/", nam, "_volcano_all_clusters.pdf"), width = 10, height = 8)
   # print(volcano_plot)
@@ -267,14 +300,14 @@ for (nam in names(subcells)) {
   plot_list <- list()
   plot_list <- list(umap_plot, heat_map2, volcano_plot, dot_plot2)
   plot_grid <- plot_grid(plotlist = plot_list, ncol = 2)
-  pdfname <- paste0("analysis_output/", nam, "_grid.pdf")
+  pdfname <- paste0("analysis_output/4_figures_", nam, "_grid.pdf")
   pdf(pdfname, height = 7, width = 11)
   print(plot_grid)
   dev.off()
   
   # list plot
-  pdfname <- paste0("analysis_output/", nam, "_list.pdf")
-  pdf(pdfname, height = 7, width = 11)
+  pdfname <- paste0("analysis_output/4_figures_", nam, "_list.pdf")
+  pdf(pdfname, height = 6, width = 12)
   for (plot in plot_list) {
     print(plot)
   }

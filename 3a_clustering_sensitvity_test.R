@@ -10,11 +10,11 @@ library(ggplot2)
 library(cowplot)
 library(SeuratWrappers)
 library(gridExtra)
-library(clue)  # for solve_LSAP
+library(clue) 
 
 
-load("D:/Partners HealthCare Dropbox/Shi Sun/Research/Pezaris/Documents/Manuscripts/transcriptomics/Rscripts/data/data.rda")
-load("D:/Partners HealthCare Dropbox/Shi Sun/Research/Pezaris/Documents/Manuscripts/transcriptomics/Rscripts/data/precluster_info.rda")
+load("data/data.rda")
+load("data/precluster_info.rda")
 
 
 subdat=datlist[,precluster$sample_name]
@@ -26,16 +26,10 @@ subcells[["K"]] <- subset(metalist$sample_name, grepl("^K", precluster$cluster_l
 
 
 # custom settings
+feature <- c(M = 2800, P = 3200, K = 1100)
+resolutions <- c(M = 0.2, P = 0.26, K = 0.24)
+ndims <- c(M = 4, P = 4, K = 7)
 
-# maximum
-feature <- c(M = 30, P = 40, K = 220)
-ndims <- c(M = 3, P = 3, K = 3)
-resolutions <-  c(M = 0.32, P = 0.2, K = 0.28)
-
-# threshold most complex
-# feature <- c(M = 40, P = 60, K = 220)
-# ndims <- c(M = 3, P = 3, K = 3)
-# resolutions <-  c(M = 0.25, P = 0.21, K = 0.29)
 
 newclusters = precluster
 newclusters$cluster_id <- c(matrix(0, 1, length(precluster$sample_name)))
@@ -71,26 +65,30 @@ for (nam in names(subcells)) {
     theme_void() +
     theme(aspect.ratio = 1, panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
   
-  # --- Sensitivity Analysis ---
-  downsample_percents <- c(0.7, 0.8, 0.9)
+  # sensitivity analysis
+  #downsample_percents <- c(0.7, 0.8, 0.9)
+  downsample_percents <- c(0.8)
   match_stats <- data.frame()
   
   for (p in downsample_percents) {
-    for (iter in 1:50) {
-      cat(sprintf(">> %s: Downsampling %.0f%%, Iteration %d\n", nam, p * 100, iter))
+    for (iter in 1:100) {
+
       set.seed(123 + iter)
-      # random
-      # sampled_cells <- sample(colnames(object), size = floor(p * ncol(object)))
+      
+      # downsample cells
+      sampled_cells <- sample(colnames(object), size = floor(p * ncol(object)))
       
       # stratified
-      sampled_cells <- unlist(lapply(split(colnames(object), object$cluster_id), function(cells_in_cluster) {
-        sample(cells_in_cluster, size = floor(p * length(cells_in_cluster)))
-      }))
+      #sampled_cells <- unlist(lapply(split(colnames(object), object$cluster_id), function(cells_in_cluster) {
+      #  sample(cells_in_cluster, size = floor(p * length(cells_in_cluster)))
+      #}))
       
       sampled_obj <- subset(object, cells = sampled_cells)
       
       # Vary number of features for sensitivity
       alt_nfeatures <- sample(c(nfeatures, round(nfeatures * 1.2), round(nfeatures * 0.8)), 1)
+      #alt_nfeatures <- nfeatures
+      
       sampled_obj[["RNA"]] <- split(sampled_obj[["RNA"]], f = sampled_obj$donor)
       sampled_obj <- SCTransform(sampled_obj, verbose = FALSE, return.only.var.genes = FALSE,
                                  variable.features.n = alt_nfeatures)
@@ -116,6 +114,9 @@ for (nam in names(subcells)) {
       
       match_stats <- rbind(match_stats, data.frame(iteration = iter, percent = p * 100,
                                                    match = match_percent, features_used = alt_nfeatures))
+      
+      cat(sprintf(" %.0f%% \n", match_percent))
+      
     }
   }
   
@@ -126,27 +127,8 @@ for (nam in names(subcells)) {
   print(summary_stats)
   
   write.csv(match_stats, sprintf("analysis_output/sensitivity_analysis_%s.csv", nam), row.names = FALSE)
+  
 }
-
-
-
-library(cowplot)
-
-# Adjust layout (2 rows × 2 columns, change as needed)
-n_cols <- 2
-n_rows <- ceiling(length(plot_list) / n_cols)
-
-pdfname <- "sensitivity_sample_umaps.pdf"
-pdf(pdfname, height = 3 * n_rows, width = 3 * n_cols)
-
-# Combine all plots into one grid
-combined_plot <- plot_grid(plotlist = plot_list, ncol = n_cols)
-
-# Save grid to PDF
-print(combined_plot)
-
-dev.off()
-
 
 
 

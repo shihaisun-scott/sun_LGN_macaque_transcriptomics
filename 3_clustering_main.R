@@ -31,9 +31,10 @@ subcells[["MPK"]] <- subset(metalist$sample_name,
 
 
 # custom settings
-feature <- c(M = 3700, P = 500, K = 500, MPK = 3000)
-resolutions <- c(M = 0.24, P = 0.28, K = 0.14, MPK = 0.5)
-ndimensions <- c(M = 5, P = 5, K = 5, MPK = 15)
+feature <- c(M = 2800, P = 3200, K = 1100, MPK = 3000)
+resolutions <- c(M = 0.2, P = 0.26, K = 0.24, MPK = 0.2)
+ndimensions <- c(M = 4, P = 4, K = 7, MPK = 15)
+
 
 newclusters = precluster
 newclusters$cluster_id <- c(matrix(0, 1, length(precluster$sample_name)))
@@ -107,7 +108,7 @@ save(seurat_objects,file="data/sct_seurat_objects.rda")
 
 umaps <- plot_grid(plotlist = plot_list, ncol = 2)
 
-pdfname <- paste0("analysis_output/clustering_umaps.pdf")
+pdfname <- paste0("analysis_output/3a_clustering_umaps.pdf")
 pdf(pdfname, height = 6, width = 8)
 print(umaps)
 dev.off()
