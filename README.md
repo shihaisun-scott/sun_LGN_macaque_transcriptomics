@@ -14,9 +14,17 @@ R scripts to replicate the macaque LGN transcriptomics analysis results presente
 2. Run the R scripts in the following order
    1. 0_install_packages
    2. 1_data_collection
-   3. 2_clustering
-   4. 3_figures
+   3. 2a_pc_detection -- qualitatively determine the number of PCs to use for downstream analysis (at elbow)
+   4. 2b_global_search -- (search only) quantitatively determine the number of features and clustering resolution for downstream analysis
+   5. 2c_global_search_postanalysis -- determines the parameters for 2b
+   6. 3a_clustering -- use the parameters above for clustering
+   7. 3b_clustering_sensitivity_test -- test the stability and sensitivity of the clustering
+   8. 3c_clustering_pvalue -- see if clustering if different from noise
+   9. 4_figures_main -- figure plotting for the paper
+   10. 5_figures_supp_donor -- supplementary figures comparing animal and species affects
 3. Figures will be saved into /analysis_output folder
+4. Optional scripts:
+   - sample_umaps -- quickly test your clustering and umaps with this
 
 ## Contact
 Scott Sun - shsun@mgh.harvard.edu
