@@ -37,7 +37,7 @@ for (nam in names(subcells)) {
   
   keepcells <- subcells[[nam]]
   expr <- subdat[, keepcells]
-  cell_meta <- newclusters[keepcells, , drop = FALSE]
+  cell_meta <- metalist[keepcells, , drop = FALSE]
   
   pc_variances <- list()
   
@@ -87,7 +87,7 @@ elb_plots <- ggplot(combined_pc_df, aes(x = PC, y = Variance, group = Features, 
   theme_minimal()
 
 # Save to PDF
-pdfname <- "2_pc_detection_overlap.pdf"
+pdfname <- "2a_pc_detection_overlap.pdf"
 pdf(pdfname, height = 5, width = 14)
 print(elb_plots)
 dev.off()
