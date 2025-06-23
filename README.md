@@ -13,7 +13,7 @@ See [Bakken et al., 2021](https://doi.org/10.7554/eLife.64875) for the original 
 
 ## Steps
 1. Download macaque LGN data from the [Allen Brain Map](https://portal.brain-map.org/atlases-and-data/rnaseq/comparative-lgn) and place into /data folder
-2. Run the R scripts in the following order
+2. Run the R scripts in the following order (make sure to set working directory to the location of these scripts)
    1. 0_install_packages
    2. 1_data_collection
    3. 2a_pc_detection -- qualitatively determine the number of PCs to use for downstream analysis (at elbow)
