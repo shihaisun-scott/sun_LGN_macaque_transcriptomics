@@ -1,3 +1,5 @@
+# install packages needed for the analysis
+
 install.packages("Seurat")
 install.packages("BiocManager")
 BiocManager::install("edgeR")     # Install edgeR using BiocManager
