@@ -3,7 +3,7 @@
 # Description
 R scripts to replicate the macaque LGN transcriptomics analysis results presented in "Single-cell transcriptomic analysis of macaque LGN neurons reveals novel subpopulations", [Sun et al., 2024](https://doi.org/10.1101/2024.11.14.623611).
 
-See [Bakken et al., 2021](https://doi.org/10.7554/eLife.64875) for the original publication of the data.
+See [Bakken et al., 2021](10.7554/eLife.64875) for the original publication of the data.
 
 ## Updates
 - 2025/6
