@@ -20,15 +20,15 @@ load("data/precluster_info.rda")
 subdat=datlist[,precluster$sample_name]
 plot_objects=list()
 subcells=list()
-subcells[["M"]] <- subset(metalist$sample_name, precluster$cluster_label == "M")
-subcells[["P"]] <- subset(metalist$sample_name, precluster$cluster_label == "P")
+# subcells[["M"]] <- subset(metalist$sample_name, precluster$cluster_label == "M")
+# subcells[["P"]] <- subset(metalist$sample_name, precluster$cluster_label == "P")
 subcells[["K"]] <- subset(metalist$sample_name, grepl("^K", precluster$cluster_label))
 
 
 # custom settings
 feature <- c(M = 2800, P = 3200, K = 1100)
-resolutions <- c(M = 0.2, P = 0.26, K = 0.24)
-ndims <- c(M = 4, P = 4, K = 7)
+resolutions <- c(M = 0.35, P = 0.26, K = 0.22)
+ndims <- c(M = 4, P = 4, K = 4)
 
 
 newclusters = precluster
@@ -65,43 +65,46 @@ for (nam in names(subcells)) {
     theme_void() +
     theme(aspect.ratio = 1, panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
   
-  # sensitivity analysis
-  #downsample_percents <- c(0.7, 0.8, 0.9)
-  downsample_percents <- c(0.8)
+  # --- Sensitivity Analysis ---
   match_stats <- data.frame()
+  original_n_clusters <- length(unique(Idents(object)))
+  skip_match_count <- 0
   
-  for (p in downsample_percents) {
-    for (iter in 1:100) {
+  set.seed(10)
+  for (iter in 1:100) {
 
-      set.seed(123 + iter)
-      
-      # downsample cells
-      sampled_cells <- sample(colnames(object), size = floor(p * ncol(object)))
-      
-      # stratified
-      #sampled_cells <- unlist(lapply(split(colnames(object), object$cluster_id), function(cells_in_cluster) {
-      #  sample(cells_in_cluster, size = floor(p * length(cells_in_cluster)))
-      #}))
-      
-      sampled_obj <- subset(object, cells = sampled_cells)
-      
-      # Vary number of features for sensitivity
-      alt_nfeatures <- sample(c(nfeatures, round(nfeatures * 1.2), round(nfeatures * 0.8)), 1)
-      #alt_nfeatures <- nfeatures
-      
-      sampled_obj[["RNA"]] <- split(sampled_obj[["RNA"]], f = sampled_obj$donor)
-      sampled_obj <- SCTransform(sampled_obj, verbose = FALSE, return.only.var.genes = FALSE,
-                                 variable.features.n = alt_nfeatures)
-      sampled_obj <- RunPCA(sampled_obj, npcs = 30, verbose = FALSE)
-      sampled_obj <- IntegrateLayers(sampled_obj, method = HarmonyIntegration,
-                                     orig.reduction = "pca", new.reduction = "harmony",
-                                     verbose = FALSE, assay = "SCT")
-      sampled_obj[["RNA"]] <- JoinLayers(sampled_obj[["RNA"]])
-      sampled_obj <- RunUMAP(sampled_obj, reduction = "harmony", dims = 1:ndim, verbose = FALSE)
-      sampled_obj <- FindNeighbors(sampled_obj, reduction = "harmony", dims = 1:ndim, verbose = FALSE)
-      sampled_obj <- FindClusters(sampled_obj, resolution = res, verbose = FALSE)
-      
-      # Compare clusters
+    # 1. Random downsampling percentage between 70–90%
+    p <- runif(1, 0.7, 0.9)
+    sampled_cells <- sample(colnames(object), size = floor(p * ncol(object)))
+    
+    # 2. Downsample object
+    sampled_obj <- subset(object, cells = sampled_cells)
+    
+    # 3. Randomize nfeatures (80–120%)
+    alt_nfeatures <- round(nfeatures * runif(1, 0.8, 1.2))
+    print(alt_nfeatures)
+    
+    # 4. Randomize ndims ±1
+    alt_ndim <- ndim + sample(c(-1, 0, 1), 1)
+    print(alt_ndim)
+    
+    # Reprocess
+    sampled_obj[["RNA"]] <- split(sampled_obj[["RNA"]], f = sampled_obj$donor)
+    sampled_obj <- SCTransform(sampled_obj, verbose = FALSE, return.only.var.genes = FALSE,
+                               variable.features.n = alt_nfeatures)
+    sampled_obj <- RunPCA(sampled_obj, npcs = 30, verbose = FALSE)
+    sampled_obj <- IntegrateLayers(sampled_obj, method = HarmonyIntegration,
+                                   orig.reduction = "pca", new.reduction = "harmony",
+                                   verbose = FALSE, assay = "SCT")
+    sampled_obj[["RNA"]] <- JoinLayers(sampled_obj[["RNA"]])
+    sampled_obj <- RunUMAP(sampled_obj, reduction = "harmony", dims = 1:alt_ndim, verbose = FALSE)
+    sampled_obj <- FindNeighbors(sampled_obj, reduction = "harmony", dims = 1:alt_ndim, verbose = FALSE)
+    sampled_obj <- FindClusters(sampled_obj, resolution = res, verbose = FALSE)
+    
+    # Match clusters only if cluster number matches original
+    sampled_n_clusters <- length(unique(Idents(sampled_obj)))
+    
+    if (sampled_n_clusters == original_n_clusters) {
       clusters <- Idents(sampled_obj)
       original_subset <- object$cluster_id[names(clusters)]
       contingency <- table(clusters, original_subset)
@@ -112,23 +115,29 @@ for (nam in names(subcells)) {
       matched <- sum(padded[cbind(1:nrow(padded), assignment)])
       match_percent <- matched / length(clusters) * 100
       
-      match_stats <- rbind(match_stats, data.frame(iteration = iter, percent = p * 100,
-                                                   match = match_percent, features_used = alt_nfeatures))
-      
-      cat(sprintf(" %.0f%% \n", match_percent))
-      
+      cat(sprintf("Iter %02d | %.0f%% match | %.0f%% cells | %d feats | %d dims\n",
+                  iter, match_percent, p * 100, alt_nfeatures, alt_ndim))
+    } else {
+      match_percent <- NA
+      skip_match_count <- skip_match_count + 1
+      cat(sprintf("Iter %02d | Skipped (cluster mismatch: %d vs %d)\n",
+                  iter, sampled_n_clusters, original_n_clusters))
     }
+    
+    match_stats <- rbind(match_stats, data.frame(iteration = iter,
+                                                 percent_cells = round(p * 100),
+                                                 match = match_percent,
+                                                 features_used = alt_nfeatures,
+                                                 ndims_used = alt_ndim))
   }
   
   # Report stats
   summary_stats <- match_stats %>%
-    group_by(percent) %>%
-    summarise(mean_match = mean(match), sd_match = sd(match))
+    summarise(mean_match = mean(match, na.rm = TRUE), sd_match = sd(match, na.rm = TRUE))
+  
   print(summary_stats)
+  cat(sprintf("Total skipped due to cluster mismatch: %d\n", skip_match_count))
   
   write.csv(match_stats, sprintf("analysis_output/sensitivity_analysis_%s.csv", nam), row.names = FALSE)
-  
 }
-
-
-
+  
