@@ -1,1 +1,1 @@
-# Folder of figures from the main scripts
+Folder of figures from the main scripts
