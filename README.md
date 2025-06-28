@@ -10,6 +10,7 @@ See [Bakken et al., 2021](https://doi.org/10.7554/eLife.64875) for the original 
    - Added global search for parameter optimization
    - Added analysis testing with ground truth data
    - Added sensitivity and stability testing
+   - Added /plots folder for manuscript figrues
 
 ## Steps
 1. Download macaque LGN data from the [Allen Brain Map](https://portal.brain-map.org/atlases-and-data/rnaseq/comparative-lgn) and place into /data folder
