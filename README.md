@@ -26,8 +26,12 @@ See [Bakken et al., 2021](https://doi.org/10.7554/eLife.64875) for the original 
    9. 3c_clustering_pvalue -- see if clustering if different from noise
    10. 4_figures_main -- figure plotting for the paper
    11. 5_figures_supp_donor -- supplementary figures comparing animal and species affects
-3. Figures will be saved into /analysis_output folder
-4. Optional scripts:
+3. Output of data and plots for each R script will be saved into /analysis_output folder
+4. Manuscript Figure plotting
+   - R plot objects are saved in /plots
+   - See 'make_figure__.R' for creation of figures
+      - Figures from here are saved in /plots/Figures
+6. Optional scripts:
    - sample_umaps -- quickly test your clustering and umaps with this
 
 ## Contact
